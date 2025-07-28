@@ -20,8 +20,8 @@ export async function getAccessToken(): Promise<string> {
     password: PASSWORD,
     location_key: LOCATION_KEY,
   });
-  console.log(response.data);
-  const { jwt_token, expires_in } = response.data;
+  console.log("23",response.data.data.token);
+  const { jwt_token, expires_in } = response.data.data.token;
   cachedToken = jwt_token;
   tokenExpiry = now + (expires_in - 60) * 1000; // Refresh 1 min before expiry
   return cachedToken || '';
