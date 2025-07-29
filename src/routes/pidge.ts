@@ -4,6 +4,8 @@ import {
   getOrderStatus,
   getRiderCurrentLocation,
 } from '../services/pidgeService';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const router = express.Router();
 
@@ -22,7 +24,7 @@ router.post('/login', async (req, res) => {
 router.get('/order/:orderId/status', async (req, res) => {
   try {
     const { orderId } = req.params;
-    const token = req.headers['authorization']?.replace('Bearer ', '') || '';
+    const token = process.env.PIDGE_TOKEN || "";
     const result = await getOrderStatus(orderId, token);
     res.json({ success: true, data: result });
   } catch (error: any) {
@@ -42,7 +44,8 @@ router.post('/webhook/status', (req, res) => {
 router.get('/rider/:riderId/location', async (req, res) => {
   try {
     const { riderId } = req.params;
-    const token = req.headers['authorization']?.replace('Bearer ', '') || '';
+    // const token = req.headers['authorization']?.replace('Bearer ', '') || '';
+    const token = process.env.PIDGE_TOKEN || "";
     const result = await getRiderCurrentLocation(riderId, token);
     res.json({ success: true, data: result });
   } catch (error: any) {
