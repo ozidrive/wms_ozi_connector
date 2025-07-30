@@ -10,10 +10,12 @@ const router = express.Router();
 // POST /orders - Push order to EasyEcom
 router.post('/createOrder', async (req, res) => {
   try {
+    console.log('Received order data:', req.body);
     const orderData = req.body;
     const result = await pushOrderToEasyEcom(orderData);
     res.status(201).json({ success: true, data: result });
   } catch (error: any) {
+    console.error('Error pushing order to EasyEcom:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
