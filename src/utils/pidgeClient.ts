@@ -7,20 +7,17 @@ const PIDGE_EMAIL = process.env.PIDGE_EMAIL || '';
 const PIDGE_PASSWORD = process.env.PIDGE_PASSWORD || '';
 
 let cachedToken: string | null = null;
-let tokenExpiry: number | null = null;
 
 export async function getPidgeAccessToken(): Promise<string> {
-  const now = Date.now();
-  if (cachedToken && tokenExpiry && now < tokenExpiry) {
-    return cachedToken;
-  }
+  console.log('Fetching Pidge access token...');
   const response = await axios.post(PIDGE_LOGIN_URL, {
-    email: PIDGE_EMAIL,
+    username: PIDGE_EMAIL,
     password: PIDGE_PASSWORD,
   });
   // Adjust the following lines based on actual API response structure
-  const { token, expires_in } = response.data.data; // Check API docs for correct keys
+  const { token } = response.data.data; // Check API docs for correct keys
+  console.log('Received data:', response.data);
   cachedToken = token;
-  tokenExpiry = now + (expires_in - 60) * 1000; // Refresh 1 min before expiry
+  console.log('Pidge access token fetched successfully:', cachedToken);
   return cachedToken || '';
 }
