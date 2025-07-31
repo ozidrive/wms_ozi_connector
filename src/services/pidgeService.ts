@@ -18,7 +18,7 @@ export async function getOrderStatus(orderId: string, token: string) {
 export async function getRiderCurrentLocation(orderId: string, token: string) {
   const token1 = await getPidgeAccessToken();
   const response = await axios.get(`${PIDGE_BASE_URL}v1.0/store/channel/vendor/order/${orderId}/fulfillment/tracking`, {
-    headers: { Authorization: `Bearer ${token1}` },
+    headers: { Authorization: `${token1}` },
   });
   return response.data;
 }
