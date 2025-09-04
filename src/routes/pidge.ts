@@ -1,6 +1,8 @@
 import express from 'express';
 import {
   // vendorLogin,
+  createOrder,
+  createOrderTryandbuy,
   getOrderStatus,
   getRiderCurrentLocation,
 } from '../services/pidgeService';
@@ -28,6 +30,32 @@ router.get('/order/:orderId/status', async (req, res) => {
     res.json({ success: true, data: result });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Create Order
+router.post('/order', async (req, res) => {
+  try {
+    const payload = req.body;
+    const result = await createOrder(payload);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    const status = error?.response?.status || 500;
+    const message = error?.response?.data || { message: error.message };
+    res.status(status).json({ success: false, error: message });
+  }
+});
+
+// Create Order (Tryandbuy Credentials)
+router.post('/order/tryandbuy', async (req, res) => {
+  try {
+    const payload = req.body;
+    const result = await createOrderTryandbuy(payload);
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    const status = error?.response?.status || 500;
+    const message = error?.response?.data || { message: error.message };
+    res.status(status).json({ success: false, error: message });
   }
 });
 
