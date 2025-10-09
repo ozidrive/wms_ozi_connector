@@ -6,7 +6,7 @@ const DB_CONFIG = {
     DB_USER: process.env.DB_USER || 'admin'
   };
   const SERVER_CONFIG = {
-    PORT: process.env.PORT || 3001,
+    PORT: process.env.PORT || 3000,
     NODE_ENV: process.env.NODE_ENV || 'development'
   };
   const API_ENDPOINTS = {
