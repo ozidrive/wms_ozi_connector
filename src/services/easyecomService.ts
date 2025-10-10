@@ -12,6 +12,7 @@ export async function createProduct(productData: any) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        'x-api-key' : 'dsdfcsqw21e2dxwed23dewee2d'
       },
     }
   );
