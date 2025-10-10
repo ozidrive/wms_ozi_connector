@@ -11,8 +11,7 @@ export async function createProduct(productData: any) {
     {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        'x-api-key' : 'dsdfcsqw21e2dxwed23dewee2d'
+        'Authorization': `Bearer ${token}`
       },
     }
   );
@@ -141,6 +140,7 @@ export async function pushOrderToEasyEcom(orderData: any) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        'x-api-key' : 'dsdfcsqw21e2dxwed23dewee2d'
       },
     }
   );
@@ -152,7 +152,7 @@ export async function getOrderDetails(invoiceId: string) {
   const response = await axios.get(
     `${EASYECOM_WEBHOOK_BASE_URL}/orders/V2/getOrderDetails?invoice_id=${invoiceId}`,
     {
-      headers: { 'Authorization': `Bearer ${token}` },
+      headers: { 'Authorization': `Bearer ${token}`, 'x-api-key' : 'dsdfcsqw21e2dxwed23dewee2d' },
     }
   );
   return response.data;
@@ -167,6 +167,7 @@ export async function cancelOrder(invoice_id: any) {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        'x-api-key' : 'dsdfcsqw21e2dxwed23dewee2d'
       },
     }
   );
