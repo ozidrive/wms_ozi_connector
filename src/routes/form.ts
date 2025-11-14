@@ -8,10 +8,17 @@ const router = express.Router();
 // Combined handler for /submit-form that detects form type
 router.post(API_ENDPOINTS.SUBMIT_FORM, async (req: Request, res: Response) => {
   try {
-    const { recommendationScore, experience } = req.body;
+    const { recommendationScore, experience, deliverySatisfaction, customerSupportSatisfaction, appExperienceSatisfaction, productQualitySatisfaction } = req.body;
     
-    // Detect if this is a review form (has recommendationScore and experience)
-    if (recommendationScore !== undefined && experience !== undefined) {
+    // Detect if this is a review form (has any review form specific fields)
+    const isReviewForm = recommendationScore !== undefined || 
+                         experience !== undefined || 
+                         deliverySatisfaction !== undefined ||
+                         customerSupportSatisfaction !== undefined ||
+                         appExperienceSatisfaction !== undefined ||
+                         productQualitySatisfaction !== undefined;
+    
+    if (isReviewForm) {
       // Handle user review form
       const { 
         name, 
@@ -21,28 +28,6 @@ router.post(API_ENDPOINTS.SUBMIT_FORM, async (req: Request, res: Response) => {
         appExperienceSatisfaction,
         productQualitySatisfaction
       } = req.body;
-
-      // Validate review form
-      if (!name || !contact) {
-        return res.status(400).json({
-          success: false,
-          message: 'Name and contact are required fields'
-        });
-      }
-
-      if (recommendationScore === undefined || recommendationScore === null) {
-        return res.status(400).json({
-          success: false,
-          message: 'Recommendation score is required'
-        });
-      }
-
-      if (!experience) {
-        return res.status(400).json({
-          success: false,
-          message: 'Experience is required'
-        });
-      }
 
       // Create new user review form submission
       const userReview = await UserReviewForm.create({
