@@ -3,10 +3,10 @@ import sequelize from '../config/database';
 
 interface UserReviewFormAttributes {
   id?: number;
-  name: string;
-  contact: string;
-  recommendationScore: number;
-  experience: string;
+  name?: string;
+  contact?: string;
+  recommendationScore?: number;
+  experience?: string;
   deliverySatisfaction?: number;
   customerSupportSatisfaction?: number;
   appExperienceSatisfaction?: number;
@@ -16,10 +16,10 @@ interface UserReviewFormAttributes {
 
 class UserReviewForm extends Model<UserReviewFormAttributes> implements UserReviewFormAttributes {
   public id!: number;
-  public name!: string;
-  public contact!: string;
-  public recommendationScore!: number;
-  public experience!: string;
+  public name?: string;
+  public contact?: string;
+  public recommendationScore?: number;
+  public experience?: string;
   public deliverySatisfaction?: number;
   public customerSupportSatisfaction?: number;
   public appExperienceSatisfaction?: number;
@@ -36,19 +36,19 @@ UserReviewForm.init({
   },
   name: {
     type: DataTypes.STRING(255),
-    allowNull: false
+    allowNull: true
   },
   contact: {
     type: DataTypes.STRING(255),
-    allowNull: false
+    allowNull: true
   },
   recommendationScore: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: true
   },
   experience: {
     type: DataTypes.TEXT,
-    allowNull: false
+    allowNull: true
   },
   deliverySatisfaction: {
     type: DataTypes.INTEGER,
