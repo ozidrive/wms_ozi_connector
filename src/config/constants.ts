@@ -10,10 +10,17 @@ const DB_CONFIG = {
     NODE_ENV: process.env.NODE_ENV || 'development'
   };
   const API_ENDPOINTS = {
-    SUBMIT_FORM: '/submit-form'
+    SUBMIT_FORM: '/submit-form',
+    WEBHOOK: '/webhook'
   };
+  
+  const WEBHOOK_CONFIG = {
+    FORWARD_URLS: (process.env.WEBHOOK_FORWARD_URLS || '').split(',').filter(url => url.trim().length > 0).map(url => url.trim())
+  };
+  
   export {
     DB_CONFIG,
     SERVER_CONFIG,
-    API_ENDPOINTS
+    API_ENDPOINTS,
+    WEBHOOK_CONFIG
   };  

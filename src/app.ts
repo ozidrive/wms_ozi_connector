@@ -11,6 +11,7 @@ import returnsRouter from './routes/returns';
 import authRouter from './routes/auth';
 import pidgeRouter from './routes/pidge';
 import formRouter from './routes/form';
+import webhookRouter from './routes/webhook';
 import sequelize from './config/database';
 import { SERVER_CONFIG } from './config/constants';
 
@@ -26,6 +27,7 @@ app.use('/returns', returnsRouter);
 app.use('/auth', authRouter);
 app.use('/pidge', pidgeRouter);
 app.use('/', formRouter);
+app.use('/', webhookRouter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
