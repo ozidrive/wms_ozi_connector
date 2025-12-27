@@ -1,12 +1,14 @@
 import express, { Request, Response } from 'express';
 import { forwardWebhook } from '../services/webhookService';
-import { API_ENDPOINTS } from '../config/constants';
+import { API_ENDPOINTS, WEBHOOK_CONFIG } from '../config/constants';
 
 const router = express.Router();
 
 /**
  * POST /webhook
- * Receives webhook data from Pidge and forwards it to 2 configured endpoints
+ * Receives webhook data from Pidge and forwards it to configured endpoints
+ * Uses NODE_WEBHOOK_FORWARD_URLS if reference_id has format PREFIX_orderId_orderStoreId
+ * Uses WEBHOOK_FORWARD_URLS if reference_id has format PREFIX_orderId
  */
 router.post(API_ENDPOINTS.WEBHOOK, async (req: Request, res: Response) => {
   try {
@@ -16,8 +18,28 @@ router.post(API_ENDPOINTS.WEBHOOK, async (req: Request, res: Response) => {
     // Log the received webhook from Pidge (optional, for debugging)
     console.log('Received webhook from Pidge:', JSON.stringify(webhookData, null, 2));
     
+    // Determine which forward URLs to use based on reference_id format
+    let forwardUrls = WEBHOOK_CONFIG.FORWARD_URLS;
+    const referenceId = webhookData.reference_id;
+    
+    if (referenceId) {
+      // Parse reference_id format: TNB_10090_12 or OTP_10090_12 or S_TNB_10090_12 or S_OTP_10090_12
+      // where 10090 is order_id and 12 is order_store_id
+      // If it has 2 underscores after removing prefix, use NODE_WEBHOOK_FORWARD_URLS
+      const withoutPrefix = referenceId.replace(/^(TNB_|OTP_|S_TNB_|S_OTP_)/, '');
+      const parts = withoutPrefix.split('_');
+      
+      // If reference_id has format PREFIX_orderId_orderStoreId (2 parts after removing prefix)
+      if (parts.length >= 2) {
+        forwardUrls = WEBHOOK_CONFIG.NODE_FORWARD_URLS;
+        console.log(`Using NODE_WEBHOOK_FORWARD_URLS for reference_id: ${referenceId}`);
+      } else {
+        console.log(`Using WEBHOOK_FORWARD_URLS for reference_id: ${referenceId}`);
+      }
+    }
+    
     // Forward the same data to all configured endpoints
-    const forwardResult = await forwardWebhook(webhookData);
+    const forwardResult = await forwardWebhook(webhookData, forwardUrls);
     
     // Determine overall success - at least one must succeed
     const overallSuccess = forwardResult.successful > 0;

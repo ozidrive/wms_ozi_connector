@@ -63,15 +63,19 @@ async function forwardToSingleUrl(url: string, data: any): Promise<any> {
 /**
  * Forwards webhook data to all configured endpoints
  * @param data - The webhook payload data
+ * @param forwardUrls - Optional array of URLs to forward to. If not provided, uses WEBHOOK_CONFIG.FORWARD_URLS
  * @returns Promise with the results from all forwarded endpoints
  */
-export async function forwardWebhook(data: any): Promise<any> {
-  if (!WEBHOOK_CONFIG.FORWARD_URLS || WEBHOOK_CONFIG.FORWARD_URLS.length === 0) {
-    throw new Error('Webhook forward URLs are not configured. Please set WEBHOOK_FORWARD_URLS environment variable (comma-separated).');
+export async function forwardWebhook(data: any, forwardUrls?: string[]): Promise<any> {
+  const urlsToUse = forwardUrls || WEBHOOK_CONFIG.FORWARD_URLS;
+  
+  if (!urlsToUse || urlsToUse.length === 0) {
+    const envVarName = forwardUrls ? 'custom URLs' : 'WEBHOOK_FORWARD_URLS';
+    throw new Error(`Webhook forward URLs are not configured. Please set ${envVarName} environment variable (comma-separated).`);
   }
 
   // Forward to all URLs in parallel
-  const forwardPromises = WEBHOOK_CONFIG.FORWARD_URLS.map(url => forwardToSingleUrl(url, data));
+  const forwardPromises = urlsToUse.map(url => forwardToSingleUrl(url, data));
   const results = await Promise.allSettled(forwardPromises);
 
   // Transform results to a consistent format
@@ -81,7 +85,7 @@ export async function forwardWebhook(data: any): Promise<any> {
     } else {
       return {
         success: false,
-        url: WEBHOOK_CONFIG.FORWARD_URLS[index],
+        url: urlsToUse[index],
         status: null,
         message: 'Error forwarding webhook',
         error: result.reason?.message || 'Unknown error',
