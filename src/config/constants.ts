@@ -15,7 +15,8 @@ const DB_CONFIG = {
   };
   
   const WEBHOOK_CONFIG = {
-    FORWARD_URLS: (process.env.WEBHOOK_FORWARD_URLS || '').split(',').filter(url => url.trim().length > 0).map(url => url.trim())
+    FORWARD_URLS: (process.env.WEBHOOK_FORWARD_URLS || '').split(',').filter(url => url.trim().length > 0).map(url => url.trim()),
+    NODE_FORWARD_URLS: (process.env.NODE_WEBHOOK_FORWARD_URLS || '').split(',').filter(url => url.trim().length > 0).map(url => url.trim())
   };
   
   export {
