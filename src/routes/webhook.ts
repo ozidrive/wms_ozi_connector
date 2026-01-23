@@ -7,8 +7,10 @@ const router = express.Router();
 /**
  * POST /webhook
  * Receives webhook data from Pidge and forwards it to configured endpoints
- * Uses NODE_WEBHOOK_FORWARD_URLS if reference_id has format PREFIX_orderId_orderStoreId
- * Uses WEBHOOK_FORWARD_URLS if reference_id has format PREFIX_orderId
+ * Uses NODE_WEBHOOK_FORWARD_URLS if:
+ *   - reference_id has format PREFIX_orderId_orderStoreId (e.g., TNB_10090_12)
+ *   - reference_id includes -PD (e.g., S_TNB_2002919-PD)
+ * Uses WEBHOOK_FORWARD_URLS if reference_id has format PREFIX_orderId (e.g., OTP_214571)
  */
 router.post(API_ENDPOINTS.WEBHOOK, async (req: Request, res: Response) => {
   try {
@@ -26,11 +28,12 @@ router.post(API_ENDPOINTS.WEBHOOK, async (req: Request, res: Response) => {
       // Parse reference_id format: TNB_10090_12 or OTP_10090_12 or S_TNB_10090_12 or S_OTP_10090_12
       // where 10090 is order_id and 12 is order_store_id
       // If it has 2 underscores after removing prefix, use NODE_WEBHOOK_FORWARD_URLS
+      // Also use NODE_WEBHOOK_FORWARD_URLS if reference_id includes -PD (e.g., S_TNB_2002919-PD)
       const withoutPrefix = referenceId.replace(/^(TNB_|OTP_|S_TNB_|S_OTP_)/, '');
       const parts = withoutPrefix.split('_');
       
-      // If reference_id has format PREFIX_orderId_orderStoreId (2 parts after removing prefix)
-      if (parts.length >= 2) {
+      // Check if reference_id includes -PD or has format PREFIX_orderId_orderStoreId (2 parts after removing prefix)
+      if (referenceId.includes('-PD') || parts.length >= 2) {
         forwardUrls = WEBHOOK_CONFIG.NODE_FORWARD_URLS;
         console.log(`Using NODE_WEBHOOK_FORWARD_URLS for reference_id: ${referenceId}`);
       } else {
