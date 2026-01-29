@@ -1,5 +1,7 @@
 import axios, { AxiosError } from 'axios';
 import { WEBHOOK_CONFIG } from '../config/constants';
+import dotenv from 'dotenv';
+dotenv.config();
 
 /**
  * Forwards webhook data to a single endpoint
@@ -9,10 +11,21 @@ import { WEBHOOK_CONFIG } from '../config/constants';
  */
 async function forwardToSingleUrl(url: string, data: any): Promise<any> {
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    };
+    
+    // Add PIDGE_API_TOKEN if configured
+    const pidgeToken = process.env.PIDGE_API_TOKEN;
+    if (pidgeToken) {
+      headers['Authorization'] = `Bearer ${pidgeToken}`;
+      console.log(`🔑 [WEBHOOK SERVICE] Adding PIDGE_API_TOKEN to webhook forward headers`);
+    } else {
+      console.warn(`⚠️ [WEBHOOK SERVICE] PIDGE_API_TOKEN not configured, forwarding without auth token`);
+    }
+    
     const response = await axios.post(url, data, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers,
       timeout: 30000 // 30 seconds timeout
     });
 
