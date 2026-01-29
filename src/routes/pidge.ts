@@ -21,15 +21,30 @@ const router = express.Router();
 //   }
 // });
 
-// Get Order Status
-router.get('/order/:orderId/status', async (req, res) => {
+// Get Order Status by Order ID, Reference ID, or AWB
+router.get('/order/:identifier/status', async (req, res) => {
   try {
-    const { orderId } = req.params;
-    const token = process.env.PIDGE_API_TOKEN || '';
-    const result = await getOrderStatus(orderId, token);
+    const { identifier } = req.params;
+    console.log(`🔍 [PIDGE ROUTE] Checking order status for identifier: ${identifier}`);
+    
+    // Try to get order status (works with orderId, reference_id, or AWB)
+    const result = await getOrderStatus(identifier, '');
+    console.log(`✅ [PIDGE ROUTE] Order found: ${identifier}`);
     res.json({ success: true, data: result });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    // If 404, order doesn't exist
+    if (error.response?.status === 404) {
+      console.log(`⚠️ [PIDGE ROUTE] Order not found: ${req.params.identifier}`);
+      return res.status(404).json({ 
+        success: false, 
+        message: `Order not found on Pidge: ${req.params.identifier}` 
+      });
+    }
+    console.error(`❌ [PIDGE ROUTE] Error checking order status:`, error.message);
+    res.status(error.response?.status || 500).json({ 
+      success: false, 
+      message: error.message 
+    });
   }
 });
 
