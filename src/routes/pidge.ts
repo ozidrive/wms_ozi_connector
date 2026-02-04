@@ -83,11 +83,18 @@ router.post('/webhook/status', (req, res) => {
 });
 
 // Get Rider Current Location
-router.get('/rider/:riderId/location', async (req, res) => {
+router.get('/rider/:riderId/location/:storeId', async (req, res) => {
   try {
-    const { riderId } = req.params;
-    // const token = req.headers['authorization']?.replace('Bearer ', '') || '';
-    const token = process.env.PIDGE_API_TOKEN || '';
+    const { riderId, storeId } = req.params;
+
+    // Select PIDGE token based on store / FC mapping
+    // storeId: 17 -> FC2 -> PIDGE_API_TOKEN_FC2
+    // storeId: 11 (default) -> FC1 -> PIDGE_API_TOKEN
+    let token = process.env.PIDGE_API_TOKEN || '';
+    if (storeId === '17') {
+      token = process.env.PIDGE_API_TOKEN_FC2 || '';
+    }
+
     const result = await getRiderCurrentLocation(riderId, token);
     res.json({ success: true, data: result });
   } catch (error: any) {
