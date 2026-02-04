@@ -121,10 +121,29 @@ export async function getOrderStatus(orderId: string, token: string) {
 }
 
 
-export async function getRiderCurrentLocation(orderId: string, token: string) {
-  const token1 = await getPidgeAccessToken();
-  const response = await axios.get(`${PIDGE_BASE_URL}v1.0/store/channel/vendor/order/${orderId}/fulfillment/tracking`, {
-    headers: { Authorization: `${token1}` },
-  });
-  return response.data;
+export async function getRiderCurrentLocation(orderId: string, storeId: string) {
+  // Determine FC based on storeId
+  // storeId: 17 -> FC2, storeId: 11 (default) -> FC1
+  const fcId = storeId === '17' ? 2 : 1;
+  console.log(`🔍 [PIDGE SERVICE] Getting rider location for order ${orderId} with FC${fcId} (storeId: ${storeId})`);
+  
+  let token: string;
+  try {
+    if (fcId === 2) {
+      console.log(`🔑 [PIDGE SERVICE] Using FC2 credentials for rider location`);
+      token = await getPidgeAccessTokenFC2();
+    } else {
+      console.log(`🔑 [PIDGE SERVICE] Using FC1 credentials for rider location`);
+      token = await getPidgeAccessToken();
+    }
+    
+    const response = await axios.get(`${PIDGE_BASE_URL}v1.0/store/channel/vendor/order/${orderId}/fulfillment/tracking`, {
+      headers: { Authorization: `${token}` },
+    });
+    console.log(`✅ [PIDGE SERVICE] Rider location retrieved successfully for order ${orderId}`);
+    return response.data;
+  } catch (error: any) {
+    console.error(`❌ [PIDGE SERVICE] Failed to get rider location for order ${orderId}:`, error.message);
+    throw error;
+  }
 }
