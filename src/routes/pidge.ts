@@ -87,15 +87,9 @@ router.get('/rider/:riderId/location/:storeId', async (req, res) => {
   try {
     const { riderId, storeId } = req.params;
 
-    // Select PIDGE token based on store / FC mapping
-    // storeId: 17 -> FC2 -> PIDGE_API_TOKEN_FC2
-    // storeId: 11 (default) -> FC1 -> PIDGE_API_TOKEN
-    let token = process.env.PIDGE_API_TOKEN || '';
-    if (storeId === '17') {
-      token = process.env.PIDGE_API_TOKEN_FC2 || '';
-    }
-
-    const result = await getRiderCurrentLocation(riderId, token);
+    // Pass storeId to determine which FC credentials to use
+    // storeId: 17 -> FC2, storeId: 11 (default) -> FC1
+    const result = await getRiderCurrentLocation(riderId, storeId);
     res.json({ success: true, data: result });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
