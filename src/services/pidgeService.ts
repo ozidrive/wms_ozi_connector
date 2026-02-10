@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getPidgeAccessToken, getPidgeAccessTokenTryandbuy, getPidgeAccessTokenFC2 } from '../utils/pidgeClient';
+import { getPidgeAccessToken, getPidgeAccessTokenTryandbuy, getPidgeAccessTokenFC2, getPidgeAccessTokenFC3 } from '../utils/pidgeClient';
 const PIDGE_BASE_URL = 'https://api.pidge.in/';
 
 /**
@@ -61,14 +61,41 @@ async function callPidgeWithRetry<T>(
 }
 
 /**
+ * Sanitize receiver email in payload - always use default email for all orders
+ * This ensures no invalid emails are sent to Pidge API
+ */
+function sanitizeReceiverEmails(payload: any): void {
+  if (!payload?.trips || !Array.isArray(payload.trips)) {
+    return;
+  }
+
+  payload.trips.forEach((trip: any, index: number) => {
+    if (trip?.receiver_detail) {
+      const originalEmail = trip.receiver_detail.email;
+      // Always use default email for all orders
+      trip.receiver_detail.email = 'abc@gmail.com';
+      
+      if (originalEmail && originalEmail !== 'abc@gmail.com') {
+        console.log(`📧 [PIDGE SERVICE] Sanitized email in trip[${index}]: "${originalEmail}" → "abc@gmail.com"`);
+      }
+    }
+  });
+}
+
+/**
  * Detect fc_id from payload based on sender_detail address label
  * FC1: "OZI TECHNOLOGIES PRIVATE LIMITED"
  * FC2: "OZI TECHNOLOGIES PRIVATE LIMITED W2"
+ * FC3: "OZI TECHNOLOGIES PRIVATE LIMITED W3"
  */
 function detectFcId(payload: any): number {
   const senderLabel = payload?.sender_detail?.address?.label || '';
   console.log(`🔍 [PIDGE SERVICE] Detecting FC ID from sender label: "${senderLabel}"`);
   
+  if (senderLabel.includes('W3')) {
+    console.log(`✅ [PIDGE SERVICE] FC3 detected (label contains "W3")`);
+    return 3;
+  }
   if (senderLabel.includes('W2')) {
     console.log(`✅ [PIDGE SERVICE] FC2 detected (label contains "W2")`);
     return 2;
@@ -78,6 +105,9 @@ function detectFcId(payload: any): number {
 }
 
 export async function createOrder(payload: any) {
+  // Sanitize receiver emails before processing
+  sanitizeReceiverEmails(payload);
+  
   const fcId = detectFcId(payload);
   const refId = payload?.trips?.[0]?.reference_id || 'N/A';
   console.log(`\n${'='.repeat(80)}`);
@@ -88,7 +118,10 @@ export async function createOrder(payload: any) {
   
   let token: string;
   try {
-    if (fcId === 2) {
+    if (fcId === 3) {
+      console.log(`🔑 [PIDGE SERVICE] Using FC3 credentials for order creation`);
+      token = await getPidgeAccessTokenFC3();
+    } else if (fcId === 2) {
       console.log(`🔑 [PIDGE SERVICE] Using FC2 credentials for order creation`);
       token = await getPidgeAccessTokenFC2();
     } else {
@@ -148,6 +181,9 @@ export async function createOrder(payload: any) {
 }
 
 export async function createOrderTryandbuy(payload: any) {
+  // Sanitize receiver emails before processing
+  sanitizeReceiverEmails(payload);
+  
   const fcId = detectFcId(payload);
   const refId = payload?.trips?.[0]?.reference_id || 'N/A';
   console.log(`\n${'='.repeat(80)}`);
@@ -158,7 +194,10 @@ export async function createOrderTryandbuy(payload: any) {
   
   let token: string;
   try {
-    if (fcId === 2) {
+    if (fcId === 3) {
+      console.log(`🔑 [PIDGE SERVICE] Using FC3 credentials for Try & Buy order creation`);
+      token = await getPidgeAccessTokenFC3();
+    } else if (fcId === 2) {
       console.log(`🔑 [PIDGE SERVICE] Using FC2 credentials for Try & Buy order creation`);
       token = await getPidgeAccessTokenFC2();
     } else {
@@ -229,13 +268,23 @@ export async function getOrderStatus(orderId: string, token: string) {
 
 export async function getRiderCurrentLocation(orderId: string, storeId: string) {
   // Determine FC based on storeId
-  // storeId: 17 -> FC2, storeId: 11 (default) -> FC1
-  const fcId = storeId === '17' ? 2 : 1;
+  // storeId: 11 -> FC1, storeId: 17 -> FC2, default -> FC3
+  let fcId: number;
+  if (storeId === '11') {
+    fcId = 1;
+  } else if (storeId === '17') {
+    fcId = 2;
+  } else {
+    fcId = 3; // Default to FC3 if no storeId matching
+  }
   console.log(`🔍 [PIDGE SERVICE] Getting rider location for order ${orderId} with FC${fcId} (storeId: ${storeId})`);
   
   let token: string;
   try {
-    if (fcId === 2) {
+    if (fcId === 3) {
+      console.log(`🔑 [PIDGE SERVICE] Using FC3 credentials for rider location`);
+      token = await getPidgeAccessTokenFC3();
+    } else if (fcId === 2) {
       console.log(`🔑 [PIDGE SERVICE] Using FC2 credentials for rider location`);
       token = await getPidgeAccessTokenFC2();
     } else {

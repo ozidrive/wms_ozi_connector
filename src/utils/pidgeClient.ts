@@ -12,9 +12,14 @@ const PIDGE_PASSWORD_TRYANDBUY = process.env.PIDGE_PASSWORD_TRYANDBUY || '';
 const PIDGE_EMAIL_FC2 = process.env.PIDGE_EMAIL_FC2 || '';
 const PIDGE_PASSWORD_FC2 = process.env.PIDGE_PASSWORD_FC2 || '';
 
+// FC3 credentials (for fc_id = 3 orders)
+const PIDGE_EMAIL_FC3 = process.env.PIDGE_EMAIL_FC3 || '';
+const PIDGE_PASSWORD_FC3 = process.env.PIDGE_PASSWORD_FC3 || '';
+
 let cachedToken: string | null = null;
 let cachedTokenTryandbuy: string | null = null;
 let cachedTokenFC2: string | null = null;
+let cachedTokenFC3: string | null = null;
 
 export async function getPidgeAccessToken(): Promise<string> {
   console.log('🔑 [PIDGE CLIENT] Fetching Pidge access token (FC1)...');
@@ -67,6 +72,28 @@ export async function getPidgeAccessTokenFC2(): Promise<string> {
     if (error.response) {
       console.error('❌ [PIDGE CLIENT] FC2 Error Response:', JSON.stringify(error.response.data, null, 2));
       console.error('❌ [PIDGE CLIENT] FC2 Status:', error.response.status);
+    }
+    throw error;
+  }
+}
+
+export async function getPidgeAccessTokenFC3(): Promise<string> {
+  console.log('🔑 [PIDGE CLIENT] Fetching Pidge access token (FC3)...');
+  console.log(`🔍 [PIDGE CLIENT] FC3 Username: ${PIDGE_EMAIL_FC3}`);
+  try {
+    const response = await axios.post(PIDGE_LOGIN_URL, {
+      username: PIDGE_EMAIL_FC3,
+      password: PIDGE_PASSWORD_FC3,
+    });
+    const { token } = response.data.data;
+    console.log('✅ [PIDGE CLIENT] FC3 token received successfully');
+    cachedTokenFC3 = token;
+    return cachedTokenFC3 || '';
+  } catch (error: any) {
+    console.error('❌ [PIDGE CLIENT] Failed to fetch FC3 token:', error.message);
+    if (error.response) {
+      console.error('❌ [PIDGE CLIENT] FC3 Error Response:', JSON.stringify(error.response.data, null, 2));
+      console.error('❌ [PIDGE CLIENT] FC3 Status:', error.response.status);
     }
     throw error;
   }
