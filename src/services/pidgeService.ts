@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getPidgeAccessToken, getPidgeAccessTokenTryandbuy, getPidgeAccessTokenFC2 } from '../utils/pidgeClient';
+import { getPidgeAccessToken, getPidgeAccessTokenTryandbuy, getPidgeAccessTokenFC2, getPidgeAccessTokenFC3 } from '../utils/pidgeClient';
 const PIDGE_BASE_URL = 'https://api.pidge.in/';
 
 /**
@@ -64,11 +64,16 @@ async function callPidgeWithRetry<T>(
  * Detect fc_id from payload based on sender_detail address label
  * FC1: "OZI TECHNOLOGIES PRIVATE LIMITED"
  * FC2: "OZI TECHNOLOGIES PRIVATE LIMITED W2"
+ * FC3: "OZI TECHNOLOGIES PRIVATE LIMITED W3"
  */
 function detectFcId(payload: any): number {
   const senderLabel = payload?.sender_detail?.address?.label || '';
   console.log(`🔍 [PIDGE SERVICE] Detecting FC ID from sender label: "${senderLabel}"`);
   
+  if (senderLabel.includes('W3')) {
+    console.log(`✅ [PIDGE SERVICE] FC3 detected (label contains "W3")`);
+    return 3;
+  }
   if (senderLabel.includes('W2')) {
     console.log(`✅ [PIDGE SERVICE] FC2 detected (label contains "W2")`);
     return 2;
@@ -88,7 +93,10 @@ export async function createOrder(payload: any) {
   
   let token: string;
   try {
-    if (fcId === 2) {
+    if (fcId === 3) {
+      console.log(`🔑 [PIDGE SERVICE] Using FC3 credentials for order creation`);
+      token = await getPidgeAccessTokenFC3();
+    } else if (fcId === 2) {
       console.log(`🔑 [PIDGE SERVICE] Using FC2 credentials for order creation`);
       token = await getPidgeAccessTokenFC2();
     } else {
@@ -158,7 +166,10 @@ export async function createOrderTryandbuy(payload: any) {
   
   let token: string;
   try {
-    if (fcId === 2) {
+    if (fcId === 3) {
+      console.log(`🔑 [PIDGE SERVICE] Using FC3 credentials for Try & Buy order creation`);
+      token = await getPidgeAccessTokenFC3();
+    } else if (fcId === 2) {
       console.log(`🔑 [PIDGE SERVICE] Using FC2 credentials for Try & Buy order creation`);
       token = await getPidgeAccessTokenFC2();
     } else {
