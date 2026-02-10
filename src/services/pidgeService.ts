@@ -61,6 +61,28 @@ async function callPidgeWithRetry<T>(
 }
 
 /**
+ * Sanitize receiver email in payload - always use default email for all orders
+ * This ensures no invalid emails are sent to Pidge API
+ */
+function sanitizeReceiverEmails(payload: any): void {
+  if (!payload?.trips || !Array.isArray(payload.trips)) {
+    return;
+  }
+
+  payload.trips.forEach((trip: any, index: number) => {
+    if (trip?.receiver_detail) {
+      const originalEmail = trip.receiver_detail.email;
+      // Always use default email for all orders
+      trip.receiver_detail.email = 'abc@gmail.com';
+      
+      if (originalEmail && originalEmail !== 'abc@gmail.com') {
+        console.log(`📧 [PIDGE SERVICE] Sanitized email in trip[${index}]: "${originalEmail}" → "abc@gmail.com"`);
+      }
+    }
+  });
+}
+
+/**
  * Detect fc_id from payload based on sender_detail address label
  * FC1: "OZI TECHNOLOGIES PRIVATE LIMITED"
  * FC2: "OZI TECHNOLOGIES PRIVATE LIMITED W2"
@@ -83,6 +105,9 @@ function detectFcId(payload: any): number {
 }
 
 export async function createOrder(payload: any) {
+  // Sanitize receiver emails before processing
+  sanitizeReceiverEmails(payload);
+  
   const fcId = detectFcId(payload);
   const refId = payload?.trips?.[0]?.reference_id || 'N/A';
   console.log(`\n${'='.repeat(80)}`);
@@ -156,6 +181,9 @@ export async function createOrder(payload: any) {
 }
 
 export async function createOrderTryandbuy(payload: any) {
+  // Sanitize receiver emails before processing
+  sanitizeReceiverEmails(payload);
+  
   const fcId = detectFcId(payload);
   const refId = payload?.trips?.[0]?.reference_id || 'N/A';
   console.log(`\n${'='.repeat(80)}`);
