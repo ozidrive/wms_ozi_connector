@@ -240,13 +240,23 @@ export async function getOrderStatus(orderId: string, token: string) {
 
 export async function getRiderCurrentLocation(orderId: string, storeId: string) {
   // Determine FC based on storeId
-  // storeId: 17 -> FC2, storeId: 11 (default) -> FC1
-  const fcId = storeId === '17' ? 2 : 1;
+  // storeId: 11 -> FC1, storeId: 17 -> FC2, default -> FC3
+  let fcId: number;
+  if (storeId === '11') {
+    fcId = 1;
+  } else if (storeId === '17') {
+    fcId = 2;
+  } else {
+    fcId = 3; // Default to FC3 if no storeId matching
+  }
   console.log(`🔍 [PIDGE SERVICE] Getting rider location for order ${orderId} with FC${fcId} (storeId: ${storeId})`);
   
   let token: string;
   try {
-    if (fcId === 2) {
+    if (fcId === 3) {
+      console.log(`🔑 [PIDGE SERVICE] Using FC3 credentials for rider location`);
+      token = await getPidgeAccessTokenFC3();
+    } else if (fcId === 2) {
       console.log(`🔑 [PIDGE SERVICE] Using FC2 credentials for rider location`);
       token = await getPidgeAccessTokenFC2();
     } else {
