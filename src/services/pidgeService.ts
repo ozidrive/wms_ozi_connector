@@ -83,23 +83,40 @@ function sanitizeReceiverEmails(payload: any): void {
 }
 
 /**
- * Detect fc_id from payload based on sender_detail address label
+ * Detect fc_id from payload based on sender_detail or receiver_detail address label
  * FC1: "OZI TECHNOLOGIES PRIVATE LIMITED"
  * FC2: "OZI TECHNOLOGIES PRIVATE LIMITED W2"
  * FC3: "OZI TECHNOLOGIES PRIVATE LIMITED W3"
+ *
+ * For regular orders: FC address is in sender_detail (FC → customer)
+ * For return orders:  FC address is in receiver_detail (customer → FC)
  */
 function detectFcId(payload: any): number {
   const senderLabel = payload?.sender_detail?.address?.label || '';
-  console.log(`🔍 [PIDGE SERVICE] Detecting FC ID from sender label: "${senderLabel}"`);
-  
+  const receiverLabel = payload?.trips?.[0]?.receiver_detail?.address?.label || '';
+
+  console.log(`🔍 [PIDGE SERVICE] Detecting FC ID from sender label: "${senderLabel}", receiver label: "${receiverLabel}"`);
+
+  // Check sender_detail first (regular orders: FC is sender)
   if (senderLabel.includes('W3')) {
-    console.log(`✅ [PIDGE SERVICE] FC3 detected (label contains "W3")`);
+    console.log(`✅ [PIDGE SERVICE] FC3 detected from sender label (contains "W3")`);
     return 3;
   }
   if (senderLabel.includes('W2')) {
-    console.log(`✅ [PIDGE SERVICE] FC2 detected (label contains "W2")`);
+    console.log(`✅ [PIDGE SERVICE] FC2 detected from sender label (contains "W2")`);
     return 2;
   }
+
+  // Check receiver_detail (return orders: FC is receiver)
+  if (receiverLabel.includes('W3')) {
+    console.log(`✅ [PIDGE SERVICE] FC3 detected from receiver label (return order, contains "W3")`);
+    return 3;
+  }
+  if (receiverLabel.includes('W2')) {
+    console.log(`✅ [PIDGE SERVICE] FC2 detected from receiver label (return order, contains "W2")`);
+    return 2;
+  }
+
   console.log(`✅ [PIDGE SERVICE] FC1 detected (default)`);
   return 1; // Default to FC1
 }
