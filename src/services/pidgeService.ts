@@ -88,6 +88,7 @@ function sanitizeReceiverEmails(payload: any): void {
  * FC2: "OZI TECHNOLOGIES PRIVATE LIMITED W2"
  * FC3: "OZI TECHNOLOGIES PRIVATE LIMITED W3"
  * FC4: "OZI TECHNOLOGIES PRIVATE LIMITED W4"
+ * FC5: "OZI TECHNOLOGIES PRIVATE LIMITED W5" (uses FC2 credentials)
  *
  * For regular orders: FC address is in sender_detail (FC → customer)
  * For return orders:  FC address is in receiver_detail (customer → FC)
@@ -103,6 +104,10 @@ function detectFcId(payload: any): number {
     console.log(`✅ [PIDGE SERVICE] FC4 detected from sender label (contains "W4")`);
     return 4;
   }
+  if (senderLabel.includes('W5')) {
+    console.log(`✅ [PIDGE SERVICE] FC5 detected from sender label (contains "W5")`);
+    return 5;
+  }
   if (senderLabel.includes('W3')) {
     console.log(`✅ [PIDGE SERVICE] FC3 detected from sender label (contains "W3")`);
     return 3;
@@ -116,6 +121,10 @@ function detectFcId(payload: any): number {
   if (receiverLabel.includes('W4')) {
     console.log(`✅ [PIDGE SERVICE] FC4 detected from receiver label (return order, contains "W4")`);
     return 4;
+  }
+  if (receiverLabel.includes('W5')) {
+    console.log(`✅ [PIDGE SERVICE] FC5 detected from receiver label (return order, contains "W5")`);
+    return 5;
   }
   if (receiverLabel.includes('W3')) {
     console.log(`✅ [PIDGE SERVICE] FC3 detected from receiver label (return order, contains "W3")`);
@@ -150,7 +159,7 @@ export async function createOrder(payload: any) {
     } else if (fcId === 3) {
       console.log(`🔑 [PIDGE SERVICE] Using FC3 credentials for order creation`);
       token = await getPidgeAccessTokenFC3();
-    } else if (fcId === 2) {
+    } else if (fcId === 2 || fcId === 5) {
       console.log(`🔑 [PIDGE SERVICE] Using FC2 credentials for order creation`);
       token = await getPidgeAccessTokenFC2();
     } else {
@@ -229,7 +238,7 @@ export async function createOrderTryandbuy(payload: any) {
     } else if (fcId === 3) {
       console.log(`🔑 [PIDGE SERVICE] Using FC3 credentials for Try & Buy order creation`);
       token = await getPidgeAccessTokenFC3();
-    } else if (fcId === 2) {
+    } else if (fcId === 2 || fcId === 5) {
       console.log(`🔑 [PIDGE SERVICE] Using FC2 credentials for Try & Buy order creation`);
       token = await getPidgeAccessTokenFC2();
     } else {
@@ -300,12 +309,14 @@ export async function getOrderStatus(orderId: string, token: string) {
 
 export async function getRiderCurrentLocation(orderId: string, storeId: string) {
   // Determine FC based on storeId
-  // storeId: 11 -> FC1, storeId: 17 -> FC2, storeId: 19 -> FC3, storeId: 20 -> FC4
+  // storeId: 11 -> FC1, 17 -> FC2, 19 -> FC3, 20 -> FC4, 21 -> FC5(using FC2 creds)
   let fcId: number;
   if (storeId === '11') {
     fcId = 1;
   } else if (storeId === '17') {
     fcId = 2;
+  } else if (storeId === '21') {
+    fcId = 5;
   } else if (storeId === '20') {
     fcId = 4;
   } else {
@@ -321,7 +332,7 @@ export async function getRiderCurrentLocation(orderId: string, storeId: string) 
     } else if (fcId === 3) {
       console.log(`🔑 [PIDGE SERVICE] Using FC3 credentials for rider location`);
       token = await getPidgeAccessTokenFC3();
-    } else if (fcId === 2) {
+    } else if (fcId === 2 || fcId === 5) {
       console.log(`🔑 [PIDGE SERVICE] Using FC2 credentials for rider location`);
       token = await getPidgeAccessTokenFC2();
     } else {
