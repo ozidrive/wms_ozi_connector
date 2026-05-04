@@ -42,23 +42,44 @@ router.post(API_ENDPOINTS.WEBHOOK, async (req: Request, res: Response) => {
     }
     
     // Forward the same data to all configured endpoints
-    const forwardResult = await forwardWebhook(webhookData, forwardUrls);
+    const forwardResult = forwardWebhook(webhookData, forwardUrls);
     
-    // Determine overall success - at least one must succeed
-    const overallSuccess = forwardResult.successful > 0;
-    const statusCode = overallSuccess ? 200 : 500;
-    
-    // Return response with both received and forwarded status
-    res.status(statusCode).json({
-      success: overallSuccess,
-      message: overallSuccess 
-        ? `Webhook received and forwarded to ${forwardResult.successful} of ${forwardResult.total} endpoints`
-        : `Webhook received but failed to forward to all ${forwardResult.total} endpoints`,
-      received: {
-        timestamp: new Date().toISOString(),
-        data: webhookData
-      },
-      forwarded: forwardResult
+    // Handle the promise and determine overall success - at least one must succeed
+    forwardResult.then(result => {
+      const overallSuccess = result.successful > 0;
+      const statusCode = overallSuccess ? 200 : 500;
+      
+      // Return response with both received and forwarded status
+      res.status(statusCode).json({
+        success: overallSuccess,
+        message: overallSuccess 
+          ? `Webhook received and forwarded to ${result.successful} of ${result.total} endpoints`
+          : `Webhook received but failed to forward to all ${result.total} endpoints`,
+        received: {
+          timestamp: new Date().toISOString(),
+          data: webhookData
+        },
+        forwarded: result
+      });
+    }).catch(error => {
+      console.error('Error processing webhook:', error);
+      
+      // Determine status code based on error
+      const statusCode = error.status || 500;
+      
+      res.status(statusCode).json({
+        success: false,
+        message: error.message || 'Error processing webhook',
+        received: {
+          timestamp: new Date().toISOString(),
+          data: webhookData
+        },
+        error: {
+          status: error.status || null,
+          message: error.error || error.message,
+          originalError: error.originalError || null
+        }
+      });
     });
   } catch (error: any) {
     console.error('Error processing webhook:', error);
