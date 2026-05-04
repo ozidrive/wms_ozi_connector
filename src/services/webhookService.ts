@@ -89,33 +89,35 @@ export async function forwardWebhook(data: any, forwardUrls?: string[]): Promise
 
   // Forward to all URLs in parallel
   const forwardPromises = urlsToUse.map(url => forwardToSingleUrl(url, data));
-  const results = await Promise.allSettled(forwardPromises);
+  
+  // Return Promise that resolves with the transformed results
+  return Promise.allSettled(forwardPromises).then(results => {
+    // Transform results to a consistent format
+    const forwardedResults = results.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        return result.value;
+      } else {
+        return {
+          success: false,
+          url: urlsToUse[index],
+          status: null,
+          message: 'Error forwarding webhook',
+          error: result.reason?.message || 'Unknown error',
+          originalError: result.reason?.message || 'Unknown error'
+        };
+      }
+    });
 
-  // Transform results to a consistent format
-  const forwardedResults = results.map((result, index) => {
-    if (result.status === 'fulfilled') {
-      return result.value;
-    } else {
-      return {
-        success: false,
-        url: urlsToUse[index],
-        status: null,
-        message: 'Error forwarding webhook',
-        error: result.reason?.message || 'Unknown error',
-        originalError: result.reason?.message || 'Unknown error'
-      };
-    }
+    // Return summary with individual results
+    const successCount = forwardedResults.filter(r => r.success).length;
+    const totalCount = forwardedResults.length;
+
+    return {
+      total: totalCount,
+      successful: successCount,
+      failed: totalCount - successCount,
+      results: forwardedResults
+    };
   });
-
-  // Return summary with individual results
-  const successCount = forwardedResults.filter(r => r.success).length;
-  const totalCount = forwardedResults.length;
-
-  return {
-    total: totalCount,
-    successful: successCount,
-    failed: totalCount - successCount,
-    results: forwardedResults
-  };
 }
 
