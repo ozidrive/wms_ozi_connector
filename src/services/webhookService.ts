@@ -87,37 +87,10 @@ export async function forwardWebhook(data: any, forwardUrls?: string[]): Promise
     throw new Error(`Webhook forward URLs are not configured. Please set ${envVarName} environment variable (comma-separated).`);
   }
 
-  // Forward to all URLs in parallel
+  // Forward to all URLs in parallel (fire and forget)
   const forwardPromises = urlsToUse.map(url => forwardToSingleUrl(url, data));
   
-  // Return Promise that resolves with the transformed results
-  return Promise.allSettled(forwardPromises).then(results => {
-    // Transform results to a consistent format
-    const forwardedResults = results.map((result, index) => {
-      if (result.status === 'fulfilled') {
-        return result.value;
-      } else {
-        return {
-          success: false,
-          url: urlsToUse[index],
-          status: null,
-          message: 'Error forwarding webhook',
-          error: result.reason?.message || 'Unknown error',
-          originalError: result.reason?.message || 'Unknown error'
-        };
-      }
-    });
-
-    // Return summary with individual results
-    const successCount = forwardedResults.filter(r => r.success).length;
-    const totalCount = forwardedResults.length;
-
-    return {
-      total: totalCount,
-      successful: successCount,
-      failed: totalCount - successCount,
-      results: forwardedResults
-    };
-  });
+  // Don't wait for results, just fire the promises
+  Promise.allSettled(forwardPromises);
 }
 
