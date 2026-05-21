@@ -18,6 +18,15 @@ import { SERVER_CONFIG } from './config/constants';
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+app.get('/health', (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use(validateApiKey);
 
 app.use('/orders', ordersRouter);
@@ -28,15 +37,6 @@ app.use('/auth', authRouter);
 app.use('/pidge', pidgeRouter);
 app.use('/', formRouter);
 app.use('/', webhookRouter);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
-  });
-});
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

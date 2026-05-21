@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const validateApiKey = (req: Request, res: Response, next: NextFunction) => {
-  // Skip API key validation for form submission and webhook routes
-  if (req.path === '/submit-form' || req.path === '/webhook') {
+  // Skip API key validation for public routes
+  if (req.path === '/health' || req.path === '/submit-form' || req.path === '/webhook') {
     return next();
   }
   
