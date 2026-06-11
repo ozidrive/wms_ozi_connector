@@ -14,7 +14,13 @@ async function forwardToSingleUrl(url: string, data: any): Promise<any> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json'
     };
-    
+
+    // Add x-forced-redirection header when enabled (manageable via WEBHOOK_FORCED_REDIRECTION env)
+    if (WEBHOOK_CONFIG.FORCED_REDIRECTION) {
+      headers['x-forced-redirection'] = 'true';
+      console.log(`➡️ [WEBHOOK SERVICE] Adding x-forced-redirection: true to webhook forward headers`);
+    }
+
     // Add PIDGE_API_TOKEN if configured
     const pidgeToken = process.env.PIDGE_API_TOKEN;
     if (pidgeToken) {
