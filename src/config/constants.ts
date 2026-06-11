@@ -16,7 +16,10 @@ const DB_CONFIG = {
   
   const WEBHOOK_CONFIG = {
     FORWARD_URLS: (process.env.WEBHOOK_FORWARD_URLS || '').split(',').filter(url => url.trim().length > 0).map(url => url.trim()),
-    NODE_FORWARD_URLS: (process.env.NODE_WEBHOOK_FORWARD_URLS || '').split(',').filter(url => url.trim().length > 0).map(url => url.trim())
+    NODE_FORWARD_URLS: (process.env.NODE_WEBHOOK_FORWARD_URLS || '').split(',').filter(url => url.trim().length > 0).map(url => url.trim()),
+    // When true, the `x-forced-redirection: true` header is added to forwarded webhooks
+    // (e.g. for {{dev}}/api/v1/webhooks/pidge-tracking). Toggle via WEBHOOK_FORCED_REDIRECTION env (default: true).
+    FORCED_REDIRECTION: (process.env.WEBHOOK_FORCED_REDIRECTION || 'true').trim().toLowerCase() === 'true'
   };
   
   export {
